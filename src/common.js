@@ -119,7 +119,9 @@ var JsUnitTest = {
   hashToSortedArray: function(hash) {
     var results = [];
     for (key in hash) {
-      results.push([key, hash[key]]);
+      var result = hash[key]
+      if (typeof(result) == 'object') result = this.hashToSortedArray(result)
+      results.push([key, result]);
     }
     return results.sort();
   },
@@ -133,9 +135,10 @@ var JsUnitTest = {
       } else {
         results.push(object);
       }
-    }
+    };
     return results;
   },
+  
   selectorMatch: function(expression, element) {
     var tokens = [];
     var patterns = {
