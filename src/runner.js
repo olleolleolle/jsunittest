@@ -2,13 +2,13 @@ JsUnitTest.Unit.Runner = function(testcases) {
   var argumentOptions = arguments[1] || {};
   var options = this.options = {};
   options.testLog = ('testLog' in argumentOptions) ? argumentOptions.testLog : 'testlog';
-  options.resultsURL = this.queryParams.resultsURL;
+  options.resultsURL = ('resultsURL' in argumentOptions) ? argumentOptions.resultsURL : this.queryParams.resultsURL;
+  options.resultsPost = ('resultsPost' in argumentOptions) ? argumentOptions.resultsPost : undefined;
   options.testLog = JsUnitTest.$(options.testLog);
-  
   this.tests = this.getTests(testcases);
   this.currentTest = 0;
   this.logger = new JsUnitTest.Unit.Logger(options.testLog);
-  
+
   var self = this;
   JsUnitTest.Event.addEvent(window, "load", function() {
     setTimeout(function() {
@@ -70,21 +70,58 @@ JsUnitTest.Unit.Runner.prototype.getResult = function() {
   return results;
 };
 
+JsUnitTest.Unit.Runner.prototype.getResult = function() {
+  var results = {
+    tests: this.tests.length,
+    assertions: 0,
+    failures: 0,
+    errors: 0,
+    warnings: 0
+  };
+
+  for (var i=0; i < this.tests.length; i++) {
+    var test = this.tests[i];
+    results.assertions += test.assertions;
+    results.failures   += test.failures;
+    results.errors     += test.errors;
+    results.warnings   += test.warnings;
+  };
+  return results;
+};
+
 JsUnitTest.Unit.Runner.prototype.postResults = function() {
+	
   if (this.options.resultsURL) {
-    // new Ajax.Request(this.options.resultsURL, 
-    //   { method: 'get', parameters: this.getResult(), asynchronous: false });
+  
     var results = this.getResult();
-    var url = this.options.resultsURL + "?";
-    url += "tests="+ this.tests.length + "&";
-    url += "assertions="+ results.assertions + "&";
-    url += "warnings="  + results.warnings + "&";
-    url += "failures="  + results.failures + "&";
-    url += "errors="    + results.errors;
+    
+    var data = ["tests="+ this.tests.length];
+    var getData = ['assertions','warnings','failures','errors'];
+    for (var i in getData){
+			data.push(encodeURIComponent(getData[i]) +'='+ encodeURIComponent(results[getData[i]]));
+    }
+    
+    var url = this.options.resultsURL;
+    
+    if (this.options.resultsPost == true){
+    	var type = 'POST';
+    	var getData = ['name','assertions','errors','failures','warnings','messages']
+    	for (var x in this.tests){
+    		for (var i in getData){
+  				data.push('results[]'+getData[i]+'='+encodeURIComponent(this.tests[x][getData[i]]));
+  			}
+    	}
+    	data = data.join('&').replace(/%20/g, "+");
+    } else {
+    	var type = 'GET';
+    	url = url +'?'+ data.join('&').replace(/%20/g, "+");
+    	data = null;
+    }
     JsUnitTest.ajax({
       url: url,
-      type: 'GET'      
-    });
+      type: type,
+      data: data
+    })
   }
 };
 

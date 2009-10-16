@@ -26,7 +26,7 @@ JsUnitTest.ajax = function( options ) {
         // The data type that'll be returned from the server
         // the default is simply to determine what data was returned from the
         // and act accordingly.
-        data: options.data || ""
+        data: options.data || null
     };
 
     // Create the request object
@@ -46,6 +46,12 @@ JsUnitTest.ajax = function( options ) {
     setTimeout(function(){
          requestDone = true;
     }, timeoutLength);
+    
+    if(options.type == 'POST' && options.data.length > 0){
+    	xml.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+    	xml.setRequestHeader("Content-length", options.data.length); 
+    	xml.setRequestHeader("Connection", "close");
+    }
 
     // Watch for when the state of the document gets updated
     xml.onreadystatechange = function(){
@@ -73,12 +79,12 @@ JsUnitTest.ajax = function( options ) {
     };
 
     // Establish the connection to the server
-    xml.send(null);
+    xml.send(options.data);
 
     // Determine the success of the HTTP response
     function httpSuccess(r) {
         try {
-            // If no server status is provided, and we're actually 
+            // If no server status is provided, and we're actually
             // requesting a local file, then it was successful
             return !r.status && location.protocol == "file:" ||
 
@@ -111,9 +117,8 @@ JsUnitTest.ajax = function( options ) {
 
         // If the specified type is "script", execute the returned text
         // response as if it was JavaScript
-        if ( type == "script" ) {
+        if ( type == "script" )
             eval.call( window, data );
-        }
 
         // Return the response data (either an XML Document or a text string)
         return data;
