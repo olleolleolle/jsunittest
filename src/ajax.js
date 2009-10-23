@@ -17,6 +17,9 @@ JsUnitTest.ajax = function( options ) {
         // How long to wait before considering the request to be a timeout
         timeout: options.timeout || 5000,
 
+        // Whether the request should be async (true | false)
+        async: typeof(options.async) == 'boolean' ? options.async : true,
+
         // Functions to call when the request fails, succeeds,
         // or completes (either fail or succeed)
         onComplete: options.onComplete || function(){},
@@ -26,26 +29,17 @@ JsUnitTest.ajax = function( options ) {
         // The data type that'll be returned from the server
         // the default is simply to determine what data was returned from the
         // and act accordingly.
-        data: options.data || null
+        data: options.data || ""
     };
 
     // Create the request object
     var xml = window.ActiveXObject ? new ActiveXObject('Microsoft.XMLHTTP') : new XMLHttpRequest();
 
     // Open the asynchronous POST request
-    xml.open(options.type, options.url, true);
-
-    // We're going to wait for a request for 5 seconds, before giving up
-    var timeoutLength = 5000;
+    xml.open(options.type, options.url, options.async);
 
     // Keep track of when the request has been succesfully completed
     var requestDone = false;
-
-    // Initalize a callback which will fire 5 seconds from now, cancelling
-    // the request (if it has not already occurred).
-    setTimeout(function(){
-         requestDone = true;
-    }, timeoutLength);
     
     if(options.type == 'POST' && options.data.length > 0){
     	xml.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
@@ -54,11 +48,15 @@ JsUnitTest.ajax = function( options ) {
     }
 
     // Watch for when the state of the document gets updated
-    xml.onreadystatechange = function(){
+    function onreadystatechange(){
         // Wait until the data is fully loaded,
         // and make sure that the request hasn't already timed out
         if ( xml.readyState == 4 && !requestDone ) {
-
+            // clear poll interval
+						if (ival) {
+							clearInterval(ival);
+							ival = null;
+						}
             // Check to see if the request was successful
             if ( httpSuccess( xml ) ) {
 
@@ -78,8 +76,21 @@ JsUnitTest.ajax = function( options ) {
         }
     };
 
+    // Setup async ajax call
+    if ( options.async ) {
+        // don't attach the handler to the request, just poll it instead
+				var ival = setInterval(onreadystatechange, 13);
+        // Initalize a callback which will fire 5 seconds from now, cancelling
+        // the request (if it has not already occurred).
+        setTimeout(function(){
+             requestDone = true;
+        }, options.timeout);
+    }
+
     // Establish the connection to the server
     xml.send(options.data);
+
+    if (!options.async) onreadystatechange();
 
     // Determine the success of the HTTP response
     function httpSuccess(r) {
