@@ -49,6 +49,12 @@ JsUnitTest.Unit.Assertions = {
     message = this.buildMessage(message || 'assertHashNotEqual', '<?> was the same as <?>', JsUnitTest.inspect(expected), JsUnitTest.inspect(actual));
     this.assertBlock(message, function() { return JsUnitTest.areHashesNotEqual(expected, actual); });
   },
+
+  assertInDelta: function(expected, actual, delta, message) {
+    delta = delta ? delta : 1;
+    message = this.buildMessage(message || 'assertDelta', 'expected <?>, actual: <?>, delta: <?>', expected, actual, delta);
+    this.assertBlock(message, function() { return Math.abs( expected -  actual ) <= Math.abs( delta ) });
+  },  
   
   assertIdentical: function(expected, actual, message) {
     message = this.buildMessage(message || 'assertIdentical', 'expected <?>, actual: <?>', expected, actual);
