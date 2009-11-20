@@ -32,15 +32,15 @@ body {
   border: 1px dotted #666;
 }
 
-.logtable .passed {
+.logtable .jsunittest-passed {
   background-color: #cfc;
 }
 
-.logtable .failed, .logtable .error {
+.logtable .jsunittest-failed, .logtable .jsunittest-error {
   background-color: #fcc;
 }
 
-.logtable .warning {
+.logtable .jsunittest-warning {
   background-color: #FC6;
 }
 

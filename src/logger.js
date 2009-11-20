@@ -23,7 +23,7 @@ JsUnitTest.Unit.Logger.prototype.start = function(testName) {
   
 JsUnitTest.Unit.Logger.prototype.setStatus = function(status) {
   var logline = this.getLastLogLine();
-  logline.className = status;
+  logline.className = 'jsunittest-'+status;
   var statusCell = logline.getElementsByTagName('td')[1];
   statusCell.appendChild(document.createTextNode(status));
 };
