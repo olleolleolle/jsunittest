@@ -1,6 +1,6 @@
-JsUnitTest.Unit.Logger = function(element) {
-  this.element = JsUnitTest.$(element);
-  if (this.element) {this._createLogTable();}
+JsUnitTest.Unit.Logger = function( element ) {
+  this.element = this._setupLog( element );
+  if (this.element) this._createLogTable();
 };
   
 JsUnitTest.Unit.Logger.prototype.start = function(testName) {
@@ -67,6 +67,10 @@ JsUnitTest.Unit.Logger.prototype._createLogTable = function() {
   '</table>';
   this.element.innerHTML = html;
 };
+
+JsUnitTest.Unit.Logger.prototype._setupLog = function( testLog ){
+	return JsUnitTest.$( testLog );
+}
   
 JsUnitTest.Unit.Logger.prototype.appendActionButtons = function(actions) {
   // actions = $H(actions);

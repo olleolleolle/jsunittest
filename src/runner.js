@@ -1,20 +1,43 @@
-JsUnitTest.Unit.Runner = function(testcases) {
-  var argumentOptions = arguments[1] || {};
-  var options = this.options = {};
-  options.testLog = ('testLog' in argumentOptions) ? argumentOptions.testLog : 'testlog';
-  options.resultsURL = ('resultsURL' in argumentOptions) ? argumentOptions.resultsURL : this.queryParams.resultsURL;
-  options.resultsPost = ('resultsPost' in argumentOptions) ? argumentOptions.resultsPost : undefined;
-  options.testLog = JsUnitTest.$(options.testLog);
-  this.tests = this.getTests(testcases);
-  this.currentTest = 0;
-  this.logger = new JsUnitTest.Unit.Logger(options.testLog);
+JsUnitTest.Unit.Runner = function(testcases) { 
+	
+	this.options = arguments[1] || {};
+    this.options.testLog = ( this.options.testLog ) ? this.options.testLog: 'testLog';
+    this.options.resultsURL = ( this.options.resultsURL ) ? this.options.resultsURL: this.queryParams.resultsURL;
+    this.options.resultsPost = ('resultsPost' in this.options) ? this.options.resultsPost: false;
+	this.options.runAsync = ('runAsync' in this.options) ? this.options.runAsync: true;
 
-  var self = this;
-  JsUnitTest.Event.addEvent(window, "load", function() {
-    setTimeout(function() {
-      self.runTests();
-    }, 0.1);
-  });
+    this.tests = this.getTests(testcases);
+    this.currentTest = 0;                                     
+	this.logger = new JsUnitTest.Unit.Logger(this.options.testLog);
+	this.options.testLog = JsUnitTest.$(this.options.testLog);
+
+	if ( this.options.runAsync ){
+	  var self = this;
+	  JsUnitTest.Event.addEvent(window, "load", function() {
+	    setTimeout(function() {
+	      self.runTests();
+	    }, 0.1);
+	  });
+
+	} else {
+
+		JsUnitTest.Unit.Runner.testList.runnerList.push( this );  
+		
+		if ( JsUnitTest.Unit.Runner.testList.runnerList.length == 1 ){
+			JsUnitTest.Event.addEvent(window, "load", function() { 
+				
+	      		JsUnitTest.Unit.Runner.testList.runnerList[JsUnitTest.Unit.Runner.testList.currentRunner].runTests();
+		  	
+			});
+		}
+
+	}
+	
+};  
+
+JsUnitTest.Unit.Runner.testList = {
+	currentRunner: 0,
+	runnerList: []
 };
 
 JsUnitTest.Unit.Runner.prototype.queryParams = JsUnitTest.toQueryParams();
@@ -150,7 +173,15 @@ JsUnitTest.Unit.Runner.prototype.runTests = function() {
 
 JsUnitTest.Unit.Runner.prototype.finish = function() {
   this.postResults();
-  this.logger.summary(this.summary());
+  this.logger.summary(this.summary());  
+
+  if ( !this.options.runAsync ){ 
+  	JsUnitTest.Unit.Runner.testList.currentRunner++;   
+
+	    if (JsUnitTest.Unit.Runner.testList.currentRunner < JsUnitTest.Unit.Runner.testList.runnerList.length) {
+	        JsUnitTest.Unit.Runner.testList.runnerList[JsUnitTest.Unit.Runner.testList.currentRunner].runTests(); 
+	    }   
+	}
 };
 
 JsUnitTest.Unit.Runner.prototype.summary = function() {
