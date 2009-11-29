@@ -1,17 +1,16 @@
 JsUnitTest.Unit.Runner = function(testcases) { 
 	
-	this.options = arguments[1] || {};
-    this.options.testLog = ( this.options.testLog ) ? this.options.testLog: 'testLog';
-    this.options.resultsURL = ( this.options.resultsURL ) ? this.options.resultsURL: this.queryParams.resultsURL;
-    this.options.resultsPost = ('resultsPost' in this.options) ? this.options.resultsPost: false;
-	this.options.runAsync = ('runAsync' in this.options) ? this.options.runAsync: true;
+	var options = arguments[1] || {};   
+	for ( var key in options ){
+		this.options[ key ] = options[ key ];
+	}
 
     this.tests = this.getTests(testcases);
     this.currentTest = 0;                                     
-	this.logger = new JsUnitTest.Unit.Logger(this.options.testLog);
-	this.options.testLog = JsUnitTest.$(this.options.testLog);
+	this.logger = new JsUnitTest.Unit.Logger( this.options.testLog );
 
-	if ( this.options.runAsync ){
+	if ( this.options.runAsync ){  
+		
 	  var self = this;
 	  JsUnitTest.Event.addEvent(window, "load", function() {
 	    setTimeout(function() {
@@ -40,7 +39,14 @@ JsUnitTest.Unit.Runner.testList = {
 	runnerList: []
 };
 
-JsUnitTest.Unit.Runner.prototype.queryParams = JsUnitTest.toQueryParams();
+JsUnitTest.Unit.Runner.prototype.queryParams = JsUnitTest.toQueryParams(); 
+
+JsUnitTest.Unit.Runner.prototype.options = {
+	testLog : 'testlog',
+	resultPost : false,
+	runAsync : true,
+	resultsURL : JsUnitTest.Unit.Runner.prototype.queryParams.resultsURL
+};
 
 JsUnitTest.Unit.Runner.prototype.portNumber = function() {
   if (window.location.search.length > 0) {
@@ -115,28 +121,29 @@ JsUnitTest.Unit.Runner.prototype.getResult = function() {
 JsUnitTest.Unit.Runner.prototype.postResults = function() {
 	
   if (this.options.resultsURL) {
-  
+	
+    var type;
+	var url = this.options.resultsURL;
     var results = this.getResult();
     
-    var data = ["tests="+ this.tests.length];
+    var data = ["tests="+ this.tests.length, 'test_file='+encodeURIComponent( location.pathname+'@'+this.logger.element.id ) ];
     var getData = ['assertions','warnings','failures','errors'];
+
     for (var i in getData){
-			data.push(encodeURIComponent(getData[i]) +'='+ encodeURIComponent(results[getData[i]]));
+			data.push( encodeURIComponent( getData[i] ) +'='+ encodeURIComponent( results[ getData[i] ] ) );
     }
     
-    var url = this.options.resultsURL;
-    
     if (this.options.resultsPost == true){
-    	var type = 'POST';
-    	var getData = ['name','assertions','errors','failures','warnings','messages']
+    	type = 'POST';
+    	getData = ['name','assertions','errors','failures','warnings','messages'];
     	for (var x in this.tests){
-    		for (var i in getData){
-  				data.push('results[]'+getData[i]+'='+encodeURIComponent(this.tests[x][getData[i]]));
+    		for (var y in getData){
+  				data.push('results[]'+getData[y]+'='+encodeURIComponent(this.tests[x][getData[y]]));
   			}
     	}
     	data = data.join('&').replace(/%20/g, "+");
     } else {
-    	var type = 'GET';
+    	type = 'GET';
     	url = url +'?'+ data.join('&').replace(/%20/g, "+");
     	data = null;
     }
@@ -144,7 +151,7 @@ JsUnitTest.Unit.Runner.prototype.postResults = function() {
       url: url,
       type: type,
       data: data
-    })
+    });
   }
 };
 
@@ -174,14 +181,18 @@ JsUnitTest.Unit.Runner.prototype.runTests = function() {
 JsUnitTest.Unit.Runner.prototype.finish = function() {
   this.postResults();
   this.logger.summary(this.summary());  
-
+  
+  	// If this TestRunner is not async run next TestRunner
   if ( !this.options.runAsync ){ 
   	JsUnitTest.Unit.Runner.testList.currentRunner++;   
 
-	    if (JsUnitTest.Unit.Runner.testList.currentRunner < JsUnitTest.Unit.Runner.testList.runnerList.length) {
-	        JsUnitTest.Unit.Runner.testList.runnerList[JsUnitTest.Unit.Runner.testList.currentRunner].runTests(); 
-	    }   
+    if (JsUnitTest.Unit.Runner.testList.currentRunner < JsUnitTest.Unit.Runner.testList.runnerList.length) {
+        JsUnitTest.Unit.Runner.testList.runnerList[JsUnitTest.Unit.Runner.testList.currentRunner].runTests(); 
+    } else {
+	    JsUnitTest.Unit.Runner.testList.currentRunner = 0;
+		return;
 	}
+  }
 };
 
 JsUnitTest.Unit.Runner.prototype.summary = function() {

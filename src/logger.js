@@ -1,5 +1,5 @@
 JsUnitTest.Unit.Logger = function( element ) {
-  this.element = this._setupLog( element );
+  this.setupLog( element );
   if (this.element) this._createLogTable();
 };
   
@@ -68,11 +68,27 @@ JsUnitTest.Unit.Logger.prototype._createLogTable = function() {
   this.element.innerHTML = html;
 };
 
-JsUnitTest.Unit.Logger.prototype._setupLog = function( testLog ){
-	return JsUnitTest.$( testLog );
-}
+JsUnitTest.Unit.Logger.prototype.setupLog = function( testLog ){    
+	// This function added to allow the customisation of the log setup  
+	this.element = JsUnitTest.$( testLog ); 
+	
+	if ( !this.element ) {           
+		var testarea = document.getElementById('testarea');   
+		
+		if ( testarea == null){
+			testarea = document.createElement( 'div' );
+			testarea.setAttribute( 'id', 'testarea' );
+			document.body.appendChild( testarea );
+		}
+		
+		this.element = document.createElement('div');
+		this.element.setAttribute('id', log );
+		testarea.appendChild( this.element );
+	}
+};
   
-JsUnitTest.Unit.Logger.prototype.appendActionButtons = function(actions) {
+JsUnitTest.Unit.Logger.prototype.appendActionButtons = function(actions) { 
+	return;
   // actions = $H(actions);
   // if (!actions.any()) return;
   // var div = new Element("div", {className: 'action_buttons'});
