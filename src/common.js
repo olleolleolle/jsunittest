@@ -87,7 +87,7 @@ var JsUnitTest = {
   	}
 
   	return myarray;
-  },
+  }, 
   
   // from now we recursively zip & compare nested arrays
   areArraysEqual: function(expected, actual) {
@@ -119,8 +119,8 @@ var JsUnitTest = {
   hashToSortedArray: function(hash) {
     var results = [];
     for (key in hash) {
-      var result = hash[key]
-      if (typeof(result) == 'object') result = this.hashToSortedArray(result)
+      var result = hash[key];
+      if (typeof(result) == 'object') result = this.hashToSortedArray(result);
       results.push([key, result]);
     }
     return results.sort();
@@ -183,10 +183,10 @@ var JsUnitTest = {
     };
     var e = this.expression, ps = patterns, as = assertions;
     var le, p, m;
-
+    var i;
     while (e && le !== e && (/\S/).test(e)) {
       le = e;
-      for (var i in ps) {
+      for (i in ps) {
         p = ps[i];
         if (m = e.match(p)) {
           // use the Selector.assertions methods unless the selector
@@ -200,7 +200,7 @@ var JsUnitTest = {
     }
 
     var match = true, name, matches;
-    for (var i = 0, token; token = tokens[i]; i++) {
+    for (i = 0, token; token = tokens[i]; i++) {
       name = token[0]; matches = token[1];
       if (!assertions[name](element, matches)) {
         match = false; break;
@@ -211,7 +211,7 @@ var JsUnitTest = {
   },
   
   toQueryParams: function(query, separator) {
-    var query = query || window.location.search;
+    query = query || window.location.search;
     var match = query.replace(/^\s+/, '').replace(/\s+$/, '').match(/([^?#]*)(#.*)?$/);
     if (!match) {return { };}
 
